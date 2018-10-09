@@ -40,7 +40,7 @@ class TweetCell: UITableViewCell {
         // Configure the view for the selected state
     }
     
-    @IBAction func didTapLike(_ sender: Any) {
+    @IBAction func didTapLike(_ sender: AnyObject) {
         tweet.favorited = true
         tweet.favoriteCount = tweet.favoriteCount! + 1
         APIManager.shared.favorite(tweet) { (tweet: Tweet?, error: Error?) in
@@ -48,10 +48,13 @@ class TweetCell: UITableViewCell {
                 print("Error favoriting tweet: \(error.localizedDescription)")
             } else if let tweet = tweet {
                 print("Successfully favorited the following Tweet: \n\(tweet.text)")
+                sender.setImage(UIImage(named: "favor-icon-red"), for: .normal)
             }
         }
     }
-    @IBAction func didTapRetweet(_ sender: Any) {
+    
+    
+    @IBAction func didTapRetweet(_ sender: AnyObject) {
         tweet.retweeted = true
         tweet.retweetCount = tweet.retweetCount + 1
         APIManager.shared.retweet(tweet) { (tweet: Tweet?, error: Error?) in
@@ -59,6 +62,7 @@ class TweetCell: UITableViewCell {
                 print("Error favoriting tweet: \(error.localizedDescription)")
             } else if let tweet = tweet {
                 print("Successfully retweeted the following Tweet: \n\(tweet.text)")
+                sender.setImage(UIImage(named: "retweet-icon-green"), for: .normal)
             }
         }
     }

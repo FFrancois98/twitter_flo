@@ -60,15 +60,16 @@ class TimelineViewController: UIViewController, UITableViewDelegate, UITableView
         cell.tweet = tweets[indexPath.row]
         cell.retweetsCountLabel.text = "\(cell.tweet.retweetCount)"
         cell.likesCountLabel.text = "\(cell.tweet.favoriteCount!)"
-        cell.usernameLabel.text = cell.tweet.user.name
+        
         let userDetails = cell.tweet.user.dictionary!
         let uniqueName = userDetails["screen_name"] as! String
-        let aviUrlString = userDetails["profile_background_image_url_https"] as? String ?? "https://goo.gl/zxU9nF"
+        let aviUrlString = userDetails["profile_image_url_https"] as? String ?? "https://goo.gl/zxU9nF"
         let aviUrl = URL(string: aviUrlString)
         let timestamp = cell.tweet.createdAtString
+        cell.usernameLabel.text = uniqueName
         
         cell.timestampLabel.text = timestamp
-        cell.uniqueNameLabel.text = uniqueName
+        cell.uniqueNameLabel.text = cell.tweet.user.name
         cell.profilePictureImageView.af_setImage(withURL: aviUrl!)
         cell.profilePictureImageView.layer.cornerRadius = cell.profilePictureImageView.frame.width / 2
         
