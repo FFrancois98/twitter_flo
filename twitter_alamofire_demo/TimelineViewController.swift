@@ -11,7 +11,14 @@ import AlamofireImage
 
 class TimelineViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
     
+    func did(post: Tweet) {
+        getTweets()
+        print(post.text)
+    }
+    
     var tweets: [Tweet] = []
+    var selectedTweet: Tweet?
+    
 
     @IBOutlet weak var tableView: UITableView!
     
@@ -23,18 +30,24 @@ class TimelineViewController: UIViewController, UITableViewDelegate, UITableView
         refreshControl.addTarget(self, action: #selector(refreshTweets(_:)), for: UIControlEvents.valueChanged)
         tableView.insertSubview(refreshControl, at: 0)
         
+        tableView.rowHeight = UITableViewAutomaticDimension
+        tableView.estimatedRowHeight = 140
+        
         tableView.dataSource = self
         tableView.delegate = self
         
-        tableView.estimatedRowHeight = 200
         tableView.rowHeight = UITableViewAutomaticDimension
+        tableView.estimatedRowHeight = 100
+        
         getTweets()
+        tableView.reloadData()
 
         // Do any additional setup after loading the view.
     }
     
     @objc func refreshTweets(_ refreshControl: UIRefreshControl) {
         getTweets()
+        tableView.reloadData()
         refreshControl.endRefreshing()
         print("Refreshed")
     }
@@ -44,6 +57,7 @@ class TimelineViewController: UIViewController, UITableViewDelegate, UITableView
             if let tweets = tweets {
                 self.tweets = tweets
                 self.tableView.reloadData()
+                print("Actually Refreshed")
             } else if let error = error {
                 print("Error getting home timeline: " + error.localizedDescription)
             }
@@ -56,29 +70,22 @@ class TimelineViewController: UIViewController, UITableViewDelegate, UITableView
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "TweetCell", for: indexPath) as! TweetCell
-        
         cell.tweet = tweets[indexPath.row]
-        cell.retweetsCountLabel.text = "\(cell.tweet.retweetCount)"
-        cell.likesCountLabel.text = "\(cell.tweet.favoriteCount!)"
-        
-        let userDetails = cell.tweet.user.dictionary!
-        let uniqueName = userDetails["screen_name"] as! String
-        let aviUrlString = userDetails["profile_image_url_https"] as? String ?? "https://goo.gl/zxU9nF"
-        let aviUrl = URL(string: aviUrlString)
-        let timestamp = cell.tweet.createdAtString
-        cell.usernameLabel.text = uniqueName
-        
-        cell.timestampLabel.text = timestamp
-        cell.uniqueNameLabel.text = cell.tweet.user.name
-        cell.profilePictureImageView.af_setImage(withURL: aviUrl!)
+        if (cell.tweet.favorited == true) {
+            cell.favoriteButton.setImage(UIImage(named: "favor-icon-red"), for: .normal)
+        }
+        if (cell.tweet.retweeted == true) {
+            cell.retweetButton.setImage(UIImage(named: "retweet-icon-green"), for: .normal)
+        }
         cell.profilePictureImageView.layer.cornerRadius = cell.profilePictureImageView.frame.width / 2
-        
-        
+        selectedTweet = tweets[indexPath.row]
         return cell
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
+        selectedTweet = tweets[indexPath.row]
+        self.performSegue(withIdentifier: "tweetSegue", sender: self)
     }
     
 
@@ -90,7 +97,21 @@ class TimelineViewController: UIViewController, UITableViewDelegate, UITableView
     @IBAction func didTapLogout(_ sender: Any) {
         APIManager.shared.logout()
     }
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        if (segue.identifier == "tweetSegue") {
+            let vc = segue.destination as! TweetViewController
+            vc.tweet = selectedTweet
+        }
+        
+        if (segue.identifier == "composeSegue") {
+            let vc = segue.destination as! ComposeTweetViewController
+            vc.delegate = (self as! ComposeViewControllerDelegate)
+        }
+    }
     
+    override func viewWillAppear(_ animated: Bool) {
+        self.tabBarController?.navigationItem.rightBarButtonItem = self.navigationItem.rightBarButtonItem;        self.tabBarController?.navigationItem.leftBarButtonItem = self.navigationItem.leftBarButtonItem
+    }
     /*
     // MARK: - Navigation
 
